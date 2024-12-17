@@ -12,7 +12,7 @@ void multiplicacao(CPU *cpu, RAM *ram, int pos1, int pos2, int posResultado,int 
     int tamanho = 0;
     programa[tamanho++]= (Instrucao){4, 1, 0, 0}; //opcode 4: registrador 1 -> 0
     programa[tamanho++] = (Instrucao){3, 2, pos1, 0}; // opcode 3: RAM -> Registrador 2
-    
+
     for (int i = 0; i < dado2; ++i) {
         programa[tamanho++] = (Instrucao){0, 0, 0, 0}; // opcode 0: Soma
     }
@@ -37,6 +37,10 @@ void fatorial(CPU *cpu, RAM *ram, int pos, int posResultado, int dado){
 void exponencial(CPU *cpu, RAM *ram, int posBase, int posResultado, int base, int expoente) {
     setDado(ram, posResultado, 1);
     setDado(ram, posBase, base);
+
+    if(base < 0){
+        base *=-1;
+    }
 
     for (int i = 0; i < expoente; ++i) {
         multiplicacao(cpu, ram, posBase, posResultado, posResultado, base, getDado(ram, posResultado));
@@ -157,6 +161,87 @@ void mmc(CPU *cpu, RAM *ram, int pos1, int pos2, int posResultado, int a, int b)
     imprimirRAM(ram);
 }
 
+void dist(CPU *cpu, RAM *ram, int pos1, int pos2, int pos3, int pos4, int posResultado ,int dado1, int dado2, int dado3, int dado4){
+    setDado(ram, posResultado, 0);
+
+    setDado(ram, pos1, dado1);
+    setDado(ram, pos2, dado2);
+    setDado(ram, pos3, dado3);
+    setDado(ram, pos4, dado4);
+
+    Instrucao* programa = alocaInstrucao(4);
+    cpu->programa = NULL;
+    int tamanho = 0;
+
+    programa[tamanho++]= (Instrucao){3, 1, pos1, 0}; // opcode 3: RAM -> Registrador 2
+    programa[tamanho++] = (Instrucao){3, 2, pos2, 0}; // opcode 3: RAM -> Registrador 2
+
+    programa[tamanho++] = (Instrucao){1, 0, 0, 0}; // opcode 1: Subtração
+    programa[tamanho++] = (Instrucao){2, 1, pos1, 0};
+
+    cpu->programa = NULL;
+    setPrograma(cpu, programa, tamanho);
+    iniciarCPU(cpu, ram, tamanho);
+    free(programa);
+
+    exponencial(cpu, ram, pos1, posResultado, getDado(ram, pos1), 2);
+
+    programa = alocaInstrucao(1);
+    cpu->programa = NULL;
+    tamanho = 0;
+
+    programa[tamanho++] = (Instrucao){2, 1, pos1, 0}; // opcode 1: Subtração
+
+    cpu->programa = NULL;
+    setPrograma(cpu, programa, tamanho);
+    iniciarCPU(cpu, ram, tamanho);
+    free(programa);
+
+    programa = alocaInstrucao(4);
+    cpu->programa = NULL;
+    tamanho = 0;
+
+    programa[tamanho++]= (Instrucao){3, 1, pos3, 0}; // opcode 3: RAM -> Registrador 2
+    programa[tamanho++] = (Instrucao){3, 2, pos4, 0}; // opcode 3: RAM -> Registrador 2
+    programa[tamanho++] = (Instrucao){1, 0, 0, 0}; // opcode 0: Soma
+    programa[tamanho++] = (Instrucao){2, 1, pos3, 0}; // opcode 1: Subtração
+
+    cpu->programa = NULL;
+    setPrograma(cpu, programa, tamanho);
+    iniciarCPU(cpu, ram, tamanho);
+    free(programa);
+
+    exponencial(cpu, ram, pos3, posResultado, getDado(ram, pos3), 2);
+
+    programa = alocaInstrucao(1);
+    cpu->programa = NULL;
+    tamanho = 0;
+
+    programa[tamanho++] = (Instrucao){2, 1, pos3, 0}; // opcode 1: Subtração
+
+    cpu->programa = NULL;
+    setPrograma(cpu, programa, tamanho);
+    iniciarCPU(cpu, ram, tamanho);
+    free(programa);
+
+    programa = alocaInstrucao(4);
+    cpu->programa = NULL;
+    tamanho = 0;
+
+    programa[tamanho++] = (Instrucao){4, 2, getDado(ram, posResultado), 0};
+    programa[tamanho++] = (Instrucao){4, 1, getDado(ram, pos1), 0};
+    programa[tamanho++] = (Instrucao){0, 0, 0, 0}; // opcode 0: Soma
+    programa[tamanho++] = (Instrucao){2, 1, pos3, 0};
+
+    cpu->programa = NULL;
+    setPrograma(cpu, programa, tamanho);
+    iniciarCPU(cpu, ram, tamanho);
+    free(programa);
+
+    raiz_quadrada(cpu, ram, pos3, posResultado, getDado(ram, pos3));
+
+}
+
 
 int main() {
     RAM ram;
@@ -170,7 +255,8 @@ int main() {
     //divisao(&cpu, &ram, 1, 2, 3, 20, 5);
     //raiz_quadrada(&cpu, &ram, 1, 3, 24);
     //hipotenusa(&cpu, &ram, 1, 2, 3, 3, 4);
-    mmc(&cpu,&ram,1,2,3,3,4);
+    //mmc(&cpu,&ram,1,2,3,3,4);
+    dist(&cpu, &ram, 0, 1, 2, 3, 4, 4, 10, 2, 4);
     imprimirRAM(&ram);
 
     liberarRAM(&ram);
