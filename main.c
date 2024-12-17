@@ -4,6 +4,22 @@
 #include <stdlib.h>
 #include <time.h>
 
+void aleatorio(CPU *cpu,RAM *ram, int pos1, int pos2,int posResultado, int dado1,int dado2){
+    srand(time(NULL));
+    int aleatorio = rand()%2;
+    setDado(ram, pos1, dado1);
+    setDado(ram, pos2, dado2);
+    Instrucao* programa = alocaInstrucao(4);
+    cpu->programa = NULL;
+    programa[0]= (Instrucao){3, 1, pos1, 0}; //opcode 4: registrador 1 -> 0
+    programa[1] = (Instrucao){3, 2, pos2, 0}; // opcode 3: RAM -> Registrador 2
+    programa[2] = (Instrucao){aleatorio, 0, 0, 0};
+    programa[3] = (Instrucao){2, 1, posResultado, 0};
+    setPrograma(cpu, programa, 4);
+    iniciarCPU(cpu, ram,4);
+
+}
+
 void multiplicacao(CPU *cpu, RAM *ram, int pos1, int pos2, int posResultado,int dado1,int dado2){
     setDado(ram, pos1, dado1);
     setDado(ram, pos2, dado2);
@@ -147,6 +163,29 @@ void hipotenusa(CPU *cpu, RAM *ram, int posA, int posB, int posResultado, int a,
     
 }
 
+void fibonacci(CPU *cpu, RAM *ram, int pos1,int pos2, int n) {
+    // Inicializa Fibonacci(0) = 0 e Fibonacci(1) = 1
+    setDado(ram, pos1, 0);       // F(0)
+    setDado(ram, pos2, 1);   // F(1)
+
+    if (n == 0 || n == 1) return; // Se n for 0 ou 1, já está pronto na RAM.
+
+    // Aloca instruções para o cálculo
+    Instrucao* programa = alocaInstrucao(5);
+    
+    for (int i = 0; i <n-1; ++i) {
+        cpu->programa = NULL;
+        programa[0] = (Instrucao){3, 1, pos1, 0};       // RAM -> Registrador1 (F(n-2))
+        programa[1] = (Instrucao){3, 2, pos2, 0};   // RAM -> Registrador2 (F(n-1))
+        programa[2] = (Instrucao){0, 0, 0, 0};   // Soma Registrador1 + Registrador2 -> RAM (F(n))
+        programa[3] = (Instrucao){2, 1, pos2, 0}; // Atualiza F(n-1)
+        programa[4] = (Instrucao){2, 2, pos1, 0};   // Atualiza F(n-2)
+        setPrograma(cpu, programa, 5);
+        iniciarCPU(cpu, ram,5);
+    }
+    free(programa);
+}
+
 
 void mmc(CPU *cpu, RAM *ram, int pos1, int pos2, int posResultado, int a, int b) {
     int posMDC = 7;
@@ -257,6 +296,10 @@ int main() {
     //hipotenusa(&cpu, &ram, 1, 2, 3, 3, 4);
     //mmc(&cpu,&ram,1,2,3,3,4);
     dist(&cpu, &ram, 0, 1, 2, 3, 4, 4, 10, 2, 4);
+    //hipotenusa(&cpu, &ram, 1, 2, 3, 3, 4);            COM FALHA!
+    //mmc(&cpu,&ram,1,2,3,3,4);
+    //fibonacci(&cpu,&ram,2,3,6);
+    aleatorio(&cpu,&ram,1,2,3,5,7);
     imprimirRAM(&ram);
 
     liberarRAM(&ram);
